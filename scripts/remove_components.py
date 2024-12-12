@@ -92,7 +92,7 @@ def remove_unused_dependencies(deptry_output, remove_optional=True):
                 # Try to parse the suggested optional keyword
                 # Looking for a line like: "try calling `uv remove --optional deploy`"
                 match = re.search(
-                    r"try calling `uv remove --optional (\S+)`", result.stdout
+                    r"try calling `uv remove --optional (\S+)`", str(result.stdout)
                 )
                 print("Match:", match)
                 if match:

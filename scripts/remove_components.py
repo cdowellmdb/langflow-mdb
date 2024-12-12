@@ -12,32 +12,57 @@ COMPONENTS_DIR = PROJECT_ROOT / "src" / "backend" / "base" / "langflow" / "compo
 
 
 def remove_component_dirs(components):
-    """Removes the specified component directories and their contents.
+    """Removes the specified components. Components can be either entire directories or specific files within them.
 
     Args:
-        components (list): A list of component names to be removed.
-
-    Returns:
-        None
+        components (list): A list of components to remove. Each component can be:
+          - A string: representing a directory to remove entirely.
+          - A dict: representing a directory with a 'files' list of specific files to remove.
     """
-    print("Starting to remove component directories...")
+    print("Starting to remove specified components...")
     print(f"Components to remove: {components}")
 
     for comp in components:
-        comp_path = COMPONENTS_DIR / comp
-        print(f"Checking if component directory exists: {comp_path}")
+        # Handle either a string or a dict with {component_name: {files: [...]}}
+        if isinstance(comp, str):
+            # Entire directory removal
+            dir_name = comp
+            files_to_remove = None
+        elif isinstance(comp, dict):
+            # Dictionary specifying a directory and possibly files
+            dir_name = list(comp.keys())[0]
+            files_to_remove = comp[dir_name].get("files", [])
+        else:
+            print(f"Unsupported component format: {comp}")
+            continue
+
+        comp_path = COMPONENTS_DIR / dir_name
+        print(f"Checking component: {comp_path}")
 
         if comp_path.is_dir():
-            print(f"Found directory: {comp_path}. Removing contents...")
-            for file_path in comp_path.glob("**/*"):
-                print(f"Removing file: {file_path}")
-                file_path.unlink()
-            print(f"Removing directory: {comp_path}")
-            comp_path.rmdir()
+            if files_to_remove:
+                # Remove only specified files
+                for file_name in files_to_remove:
+                    file_path = comp_path / file_name
+                    if file_path.is_file():
+                        print(f"Removing file: {file_path}")
+                        file_path.unlink()
+                    else:
+                        print(f"File not found or not a file: {file_path}")
+                # If no other files left, and you want to keep directory, do nothing.
+                # Directory stays if not explicitly removed.
+            else:
+                # No files specified, remove entire directory
+                print(f"Removing entire directory: {comp_path}")
+                for file_path in comp_path.glob("**/*"):
+                    if file_path.is_file():
+                        print(f"Removing file: {file_path}")
+                        file_path.unlink()
+                comp_path.rmdir()
         else:
             print(f"Directory does not exist: {comp_path}")
 
-    print("Finished removing component directories.")
+    print("Finished removing specified components.")
 
 
 def run_deptry(verbose=False):
@@ -112,7 +137,9 @@ def remove_unused_dependencies(deptry_output, remove_optional=True):
                         print(opt_result.stdout)
                         print(opt_result.stderr)
                     else:
-                        print(f"Successfully removed optional dependency {dep} using keyword {optional_keyword}.")
+                        print(
+                            f"Successfully removed optional dependency {dep} using keyword {optional_keyword}."
+                        )
                 else:
                     # Could not parse the optional keyword
                     print(

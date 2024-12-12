@@ -1,3 +1,5 @@
 components_to_remove:
-  # - crewai # Test: Remove the crewai component
-  - models # Test: Remove the models component
+  - crewai
+  - models:
+      files:
+        - cohere.py

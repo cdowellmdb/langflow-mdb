@@ -94,6 +94,7 @@ def remove_unused_dependencies(deptry_output, remove_optional=True):
                 match = re.search(
                     r"try calling `uv remove --optional (\S+)`", result.stdout
                 )
+                print("Match:", match)
                 if match:
                     optional_keyword = match.group(1)
                     print(

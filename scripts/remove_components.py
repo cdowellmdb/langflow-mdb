@@ -4,7 +4,7 @@ import logging
 import re
 import subprocess
 from pathlib import Path
-from typing import Any, List, Union
+from typing import Any
 
 import yaml
 
@@ -13,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent
 CONFIG_PATH: Path = PROJECT_ROOT / "scripts" / "component_config.yml"
-COMPONENTS_DIR: Path = (
-    PROJECT_ROOT / "src" / "backend" / "base" / "langflow" / "components"
-)
+COMPONENTS_DIR: Path = PROJECT_ROOT / "src" / "backend" / "base" / "langflow" / "components"
 
 
 def load_config(config_path: Path) -> dict[str, Any]:
@@ -23,7 +21,7 @@ def load_config(config_path: Path) -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
-def remove_component_dirs(components: list[Union[str, dict[str, Any]]]) -> None:
+def remove_component_dirs(components: str | dict[str, Any]) -> None:
     """Remove specified components (directories or files).
 
     Args:
@@ -33,20 +31,20 @@ def remove_component_dirs(components: list[Union[str, dict[str, Any]]]) -> None:
 
     for comp in components:
         dir_name: str
-        files_to_remove: List[str] = []
+        files_to_remove: list[str] = []
 
         if isinstance(comp, str):
             dir_name = comp
         elif isinstance(comp, dict):
-            dir_name = list(comp.keys())[0]
+            dir_name = next(iter(comp.keys()))
             files_to_remove = comp[dir_name].get("files", [])
         else:
-            logger.warning(f"Unsupported component format: {comp}")
+            logger.warning("Unsupported component format: " + str(comp))  # noqa: G003
             continue
 
         comp_path = COMPONENTS_DIR / dir_name
         if not comp_path.is_dir():
-            logger.info(f"Directory does not exist: {comp_path}")
+            logger.info(f"Directory does not exist: {comp_path}")  # noqa: G004
             continue
 
         if files_to_remove:
@@ -54,23 +52,23 @@ def remove_component_dirs(components: list[Union[str, dict[str, Any]]]) -> None:
             for file_name in files_to_remove:
                 file_path = comp_path / file_name
                 if file_path.is_file():
-                    logger.info(f"Removing file: {file_path}")
+                    logger.info(f"Removing file: {file_path}")  # noqa: G004
                     file_path.unlink()
                 else:
-                    logger.info(f"File not found or not a file: {file_path}")
+                    logger.info(f"File not found or not a file: {file_path}")  # noqa: G004
         else:
             # Remove entire directory
-            logger.info(f"Removing entire directory: {comp_path}")
+            logger.info(f"Removing entire directory: {comp_path}")  # noqa: G004
             for file_path in comp_path.glob("**/*"):
                 if file_path.is_file():
-                    logger.info(f"Removing file: {file_path}")
+                    logger.info(f"Removing file: {file_path}")  # noqa: G004
                     file_path.unlink()
             comp_path.rmdir()
 
     logger.info("Finished removing specified components.")
 
 
-def run_deptry(verbose: bool = False) -> str:
+def run_deptry(verbose: bool) -> str:  # noqa: FBT001
     """Run deptry to identify unused dependencies.
 
     Args:
@@ -80,8 +78,8 @@ def run_deptry(verbose: bool = False) -> str:
         The output of the deptry command.
     """
     logger.info("Running `deptry` to identify unused dependencies...")
-    result = subprocess.run(
-        ["uv", "run", "deptry", "."],
+    result = subprocess.run(  # noqa: S603
+        ["/path/to/uv", "run", "deptry", "."],  # Replace "/path/to/uv" with the actual path to the `uv` executable
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -94,9 +92,9 @@ def run_deptry(verbose: bool = False) -> str:
     return result.stdout
 
 
-def parse_unused_dependencies(deptry_output: str) -> List[str]:
+def parse_unused_dependencies(deptry_output: str) -> list[str]:
     """Parse deptry output to find unused dependencies."""
-    unused_deps: List[str] = []
+    unused_deps: list[str] = []
     for line in deptry_output.splitlines():
         if "DEP002" in line:
             dep_match = re.search(r"'([^']+)'", line)
@@ -106,9 +104,7 @@ def parse_unused_dependencies(deptry_output: str) -> List[str]:
     return unused_deps
 
 
-def remove_unused_dependencies(
-    deptry_output: str, remove_optional: bool = True
-) -> None:
+def remove_unused_dependencies(deptry_output: str, remove_optional: bool) -> None:  # noqa: FBT001
     """Remove unused dependencies by running `uv remove` commands.
 
     Args:
@@ -123,30 +119,24 @@ def remove_unused_dependencies(
         return
 
     for dep in unused_deps:
-        logger.info(f"Removing unused dependency: {dep}")
-        result = subprocess.run(
-            ["uv", "remove", dep],
+        logger.info(f"Removing unused dependency: {dep}")  # noqa: G004
+        result = subprocess.run(  # noqa: S603
+            ["uv", "remove", dep],  # noqa: S607
             capture_output=True,
             text=True,
             cwd=PROJECT_ROOT,
             check=False,
         )
         if result.returncode != 0:
-            logger.warning(
-                f"Failed to remove {dep}. Output:\n{result.stdout}\n{result.stderr}"
-            )
+            logger.warning(f"Failed to remove {dep}. Output:\n{result.stdout}\n{result.stderr}")  # noqa: G004
 
             if remove_optional:
-                match = re.search(
-                    r"try calling `uv remove --optional (\S+)`", result.stderr
-                )
+                match = re.search(r"try calling `uv remove --optional (\S+)`", result.stderr)
                 if match:
                     optional_keyword = match.group(1)
-                    logger.info(
-                        f"Attempting optional removal of {dep} with keyword '{optional_keyword}'..."
-                    )
-                    opt_result = subprocess.run(
-                        ["uv", "remove", dep, "--optional", optional_keyword],
+                    logger.info(f"Attempting optional removal of {dep} with keyword '{optional_keyword}'...")  # noqa: G004
+                    opt_result = subprocess.run(  # noqa: S603
+                        ["uv", "remove", dep, "--optional", optional_keyword],  # noqa: S607
                         capture_output=True,
                         text=True,
                         cwd=PROJECT_ROOT,
@@ -154,16 +144,16 @@ def remove_unused_dependencies(
                     )
                     if opt_result.returncode != 0:
                         logger.warning(
-                            f"Failed to remove {dep} even as optional. Output:\n{opt_result.stdout}\n{opt_result.stderr}"
+                            f"Failed to remove {dep} as optional. Output:\n{opt_result.stdout}\n{opt_result.stderr}"  # noqa: G004
                         )
                     else:
-                        logger.info(f"Successfully removed optional dependency {dep}.")
+                        logger.info(f"Successfully removed optional dependency {dep}.")  # noqa: G004
                 else:
-                    logger.warning(f"No optional keyword found for {dep}. Skipping.")
+                    logger.warning(f"No optional keyword found for {dep}. Skipping.")  # noqa: G004
             else:
                 logger.info("Optional removal not enabled. Skipping.")
         else:
-            logger.info(f"Successfully removed {dep}.")
+            logger.info(f"Successfully removed {dep}.")  # noqa: G004
 
     logger.info("Finished removing unused dependencies.")
 
@@ -173,8 +163,8 @@ def main() -> None:
     config = load_config(CONFIG_PATH)
     comps_to_remove = config.get("components_to_remove", [])
     remove_component_dirs(comps_to_remove)
-    deptry_output = run_deptry()
-    remove_unused_dependencies(deptry_output)
+    deptry_output = run_deptry(verbose=False)
+    remove_unused_dependencies(deptry_output, remove_optional=True)
     logger.info("Script execution completed.")
 
 

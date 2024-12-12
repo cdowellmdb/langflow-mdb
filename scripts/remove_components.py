@@ -52,9 +52,14 @@ def run_deptry():
     """
     print("Running `deptry` to identify unused dependencies...")
     result = subprocess.run(
-        ["uv", "run", "deptry", "."], capture_output=True, text=True, cwd=PROJECT_ROOT
+        ["uv", "run", "deptry", "."],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        cwd=PROJECT_ROOT
     )
-    print(f"`deptry` output:\n{result.stdout}")
+    print("Deptry combined output:")
+    print(result.stdout)
     return result.stdout
 
 

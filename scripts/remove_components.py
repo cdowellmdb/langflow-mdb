@@ -78,24 +78,47 @@ def remove_unused_dependencies(deptry_output, remove_optional=True):
 
     for dep in unused_deps:
         print(f"Removing unused dependency: {dep}")
-        try:
-            subprocess.run(["uv", "remove", dep], check=True, cwd=PROJECT_ROOT)
-        except subprocess.CalledProcessError as e:
-            print(f"Warning: Failed to remove {dep} normally. Error message:")
-            print(e)
+        # Run uv remove with capture to analyze output on failure
+        result = subprocess.run(
+            ["uv", "remove", dep], capture_output=True, text=True, cwd=PROJECT_ROOT
+        )
+        if result.returncode != 0:
+            print(f"Warning: Failed to remove {dep} normally. Output:")
+            print(result.stdout)
+            print(result.stderr)
+
             if remove_optional:
-                print(f"Attempting to remove {dep} as an optional dependency...")
-                try:
-                    subprocess.run(
-                        ["uv", "remove", dep, "--optional", "local"],
-                        check=True,
+                # Try to parse the suggested optional keyword
+                # Looking for a line like: "try calling `uv remove --optional deploy`"
+                match = re.search(
+                    r"try calling `uv remove --optional (\S+)`", result.stdout
+                )
+                if match:
+                    optional_keyword = match.group(1)
+                    print(
+                        f"Attempting to remove {dep} as an optional dependency using keyword '{optional_keyword}'..."
+                    )
+                    opt_result = subprocess.run(
+                        ["uv", "remove", dep, "--optional", optional_keyword],
+                        capture_output=True,
+                        text=True,
                         cwd=PROJECT_ROOT,
                     )
-                except subprocess.CalledProcessError as e_opt:
-                    print(f"Warning: Failed to remove {dep} even as optional.")
-                    print(e_opt)
+                    if opt_result.returncode != 0:
+                        print(
+                            f"Warning: Failed to remove {dep} even as optional with '{optional_keyword}'."
+                        )
+                        print(opt_result.stdout)
+                        print(opt_result.stderr)
+                else:
+                    # Could not parse the optional keyword
+                    print(
+                        f"Warning: Could not parse optional dependency keyword for {dep}. Skipping."
+                    )
             else:
                 print("Optional removal not enabled. Skipping.")
+        else:
+            print(f"Successfully removed {dep}.")
 
     print("Finished removing unused dependencies.")
 

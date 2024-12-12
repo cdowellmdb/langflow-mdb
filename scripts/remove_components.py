@@ -1,4 +1,4 @@
-"This script removes specified component directories and unused dependencies from the project. It uses a YAML configuration file to identify components to remove and leverages the `deptry` tool to detect unused dependencies."
+"""This script removes specified component directories and unused dependencies from the project. It uses a YAML configuration file to identify components to remove and leverages the `deptry` tool to detect unused dependencies."""
 
 import subprocess
 from pathlib import Path
@@ -8,12 +8,10 @@ import yaml
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = PROJECT_ROOT / "scripts" / "component_config.yml"
 COMPONENTS_DIR = PROJECT_ROOT / "src" / "backend" / "base" / "langflow" / "components"
-print(PROJECT_ROOT)
 
 
 def remove_component_dirs(components):
-    """
-    Removes the specified component directories and their contents.
+    """Removes the specified component directories and their contents.
 
     Args:
         components (list): A list of component names to be removed.
@@ -33,9 +31,6 @@ def remove_component_dirs(components):
             for file_path in comp_path.glob("**/*"):
                 print(f"Removing file: {file_path}")
                 file_path.unlink()
-            # for dir_path in comp_path.glob("**/"):
-            #     print(f"Removing directory: {dir_path}")
-            #     dir_path.rmdir()
             print(f"Removing directory: {comp_path}")
             comp_path.rmdir()
         else:
@@ -56,14 +51,14 @@ def run_deptry():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        cwd=PROJECT_ROOT
+        cwd=PROJECT_ROOT,
     )
     print("Deptry combined output:")
     print(result.stdout)
     return result.stdout
 
 
-def remove_unused_dependencies(deptry_output):
+def remove_unused_dependencies(deptry_output, remove_optional=True):
     print("Starting to remove unused dependencies...")
     unused_deps = []
     for line in deptry_output.splitlines():
@@ -79,7 +74,24 @@ def remove_unused_dependencies(deptry_output):
 
     for dep in unused_deps:
         print(f"Removing unused dependency: {dep}")
-        subprocess.run(["uv", "remove", dep], check=True, cwd=PROJECT_ROOT)
+        try:
+            subprocess.run(["uv", "remove", dep], check=True, cwd=PROJECT_ROOT)
+        except subprocess.CalledProcessError as e:
+            print(f"Warning: Failed to remove {dep} normally. Error message:")
+            print(e)
+            if remove_optional:
+                print(f"Attempting to remove {dep} as an optional dependency...")
+                try:
+                    subprocess.run(
+                        ["uv", "remove", dep, "--optional"],
+                        check=True,
+                        cwd=PROJECT_ROOT,
+                    )
+                except subprocess.CalledProcessError as e_opt:
+                    print(f"Warning: Failed to remove {dep} even as optional.")
+                    print(e_opt)
+            else:
+                print("Optional removal not enabled. Skipping.")
 
     print("Finished removing unused dependencies.")
 

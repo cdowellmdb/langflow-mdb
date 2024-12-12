@@ -39,8 +39,11 @@ def remove_component_dirs(components):
     print("Finished removing component directories.")
 
 
-def run_deptry():
+def run_deptry(verbose=False):
     """Runs `deptry` to identify unused dependencies.
+
+    Args:
+        verbose (bool): If True, print the output of the `deptry` command.
 
     Returns:
         str: The output of the `deptry` command.
@@ -53,8 +56,9 @@ def run_deptry():
         text=True,
         cwd=PROJECT_ROOT,
     )
-    print("Deptry combined output:")
-    print(result.stdout)
+    if verbose:
+        print("Deptry combined output:")
+        print(result.stdout)
     return result.stdout
 
 

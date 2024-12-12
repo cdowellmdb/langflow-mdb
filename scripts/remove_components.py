@@ -83,7 +83,7 @@ def remove_unused_dependencies(deptry_output, remove_optional=True):
                 print(f"Attempting to remove {dep} as an optional dependency...")
                 try:
                     subprocess.run(
-                        ["uv", "remove", dep, "--optional"],
+                        ["uv", "remove", dep, "--optional", "local"],
                         check=True,
                         cwd=PROJECT_ROOT,
                     )

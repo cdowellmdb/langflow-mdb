@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 import re
 import subprocess
@@ -79,7 +77,7 @@ def run_deptry(verbose: bool) -> str:  # noqa: FBT001
     """
     logger.info("Running `deptry` to identify unused dependencies...")
     result = subprocess.run(  # noqa: S603
-        ["/path/to/uv", "run", "deptry", "."],  # Replace "/path/to/uv" with the actual path to the `uv` executable
+        ["uv", "run", "deptry", "."],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

@@ -1,5 +1,6 @@
 """This script removes specified component directories and unused dependencies from the project. It uses a YAML configuration file to identify components to remove and leverages the `deptry` tool to detect unused dependencies."""
 
+import re
 import subprocess
 from pathlib import Path
 

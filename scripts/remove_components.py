@@ -77,7 +77,7 @@ def run_deptry(verbose: bool) -> str:  # noqa: FBT001
     """
     logger.info("Running `deptry` to identify unused dependencies...")
     result = subprocess.run(  # noqa: S603
-        ["uv", "run", "deptry", "."],
+        ["uv", "run", "deptry", "."], # noqa: S607
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,

@@ -57,6 +57,27 @@ pip install langflow
 
 [![Getting Started](https://github.com/user-attachments/assets/f1adfbe7-3c35-43a4-b265-661f3d4f875f)](https://www.youtube.com/watch?v=kinngWhaUKM)
 
+# Running Langflow From the Repository
+
+When running Langflow directly from this repository, you must build the frontend and run the backend from separate terminals. Unlike the documentation’s instructions for installed distributions, running `langflow run` directly from this repo will fail unless you provide a built frontend.
+
+Use this workflow whenever you want to test or develop Langflow directly from this repository.
+
+**Follow these steps:**
+
+1. **Build the backend:**  
+From the repository’s root, run:
+```bash
+make backend
+```
+
+2. **Build the frontend:**  
+From the repository’s root, run:
+```bash
+make frontend
+```
+This will start the frontend in a development mode, useful if you are actively changing UI code.
+
 ## ⭐ Stay up-to-date
 
 Star Langflow on GitHub to be instantly notified of new releases.

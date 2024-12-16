@@ -23,7 +23,7 @@ components_to_remove:
 2. **Run the Script:** Execute the `remove_components.py` script from the command line:
 
 ```bash
-cd scripts && uv run python scripts/remove_components.py
+cd scripts && uv run python remove_components.py
 ```
 
 3. **Review the Output:** The script will log the removal process, including any unused dependencies identified by the `deptry` command.

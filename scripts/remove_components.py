@@ -146,7 +146,10 @@ def remove_unused_dependencies(
         return
 
     for dep in unused_deps:
-        if dep == "langflow-base":
+        if (
+            dep == "langflow-base"
+        ):  # This has to be kept, otherwise the backend will not build.
+            logger.info(f"Skipping {dep}...required for building backend.")
             continue
         logger.info(f"Removing unused dependency: {dep}")  # noqa: G004
         result = subprocess.run(  # noqa: S603

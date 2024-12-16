@@ -146,6 +146,8 @@ def remove_unused_dependencies(
         return
 
     for dep in unused_deps:
+        if dep == "langflow-base":
+            continue
         logger.info(f"Removing unused dependency: {dep}")  # noqa: G004
         result = subprocess.run(  # noqa: S603
             ["uv", "remove", dep],  # noqa: S607
